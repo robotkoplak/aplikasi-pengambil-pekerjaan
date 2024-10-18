@@ -17,14 +17,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if ($user) {
             error_log("Stored password hash: " . $user['password']);
+            $test_hash = password_hash('123456', PASSWORD_DEFAULT);
+            error_log("Test hash generated: " . $test_hash);
             $verify_result = password_verify($password, $user['password']);
             error_log("Password verify result: " . ($verify_result ? 'true' : 'false'));
-
-            // Manual verification
+            
+            // Tambahkan verifikasi manual
             $manual_verify = (crypt($password, $user['password']) === $user['password']);
             error_log("Manual verify result: " . ($manual_verify ? 'true' : 'false'));
 
             if ($verify_result || $manual_verify) {
+                // Login berhasil
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
