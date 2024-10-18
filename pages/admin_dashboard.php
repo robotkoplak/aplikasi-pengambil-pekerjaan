@@ -14,6 +14,14 @@ $pageTitle = 'Admin Dashboard';
 include '../includes/header.php';
 ?>
 
+<?php if (isset($_GET['success'])): ?>
+    <div class="alert alert-success"><?php echo htmlspecialchars($_GET['success']); ?></div>
+<?php endif; ?>
+
+<?php if (isset($_GET['error'])): ?>
+    <div class="alert alert-danger"><?php echo htmlspecialchars($_GET['error']); ?></div>
+<?php endif; ?>
+
 <h1 class="mb-4">Dashboard Admin</h1>
 
 <div class="row">
@@ -33,7 +41,7 @@ include '../includes/header.php';
     </div>
     <div class="col-md-6">
         <h2>Buat User Baru</h2>
-        <form action="create_user.php" method="POST" class="mb-4">
+        <form method="POST" action="create_user.php">
             <div class="mb-3">
                 <label for="username" class="form-label">Username:</label>
                 <input type="text" class="form-control" id="username" name="username" required>
