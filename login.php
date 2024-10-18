@@ -9,25 +9,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    error_log("Login attempt: username=$username, password=$password");
+    error_log("Login attempt: username=$username");
 
     try {
         $user = getUserByUsername($pdo, $username);
-        error_log("User found: " . ($user ? json_encode($user) : 'no'));
+        error_log("User found: " . ($user ? 'yes' : 'no'));
 
         if ($user) {
             error_log("Stored password hash: " . $user['password']);
-            $test_hash = password_hash('123456', PASSWORD_DEFAULT);
-            error_log("Test hash generated: " . $test_hash);
             $verify_result = password_verify($password, $user['password']);
             error_log("Password verify result: " . ($verify_result ? 'true' : 'false'));
-            
-            // Tambahkan verifikasi manual
-            $manual_verify = (crypt($password, $user['password']) === $user['password']);
-            error_log("Manual verify result: " . ($manual_verify ? 'true' : 'false'));
 
-            if ($verify_result || $manual_verify) {
-                // Login berhasil
+            if ($verify_result) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
@@ -37,9 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit();
             } else {
                 $error = "Password salah.";
+                error_log("Login failed: incorrect password");
             }
         } else {
             $error = "Username tidak ditemukan.";
+            error_log("Login failed: username not found");
         }
     } catch (Exception $e) {
         error_log("Error during login: " . $e->getMessage());
@@ -47,28 +42,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$pageTitle = 'Login';
-include 'includes/header.php';
+// Tambahkan ini untuk debugging
+if (isset($_GET['debug'])) {
+    phpinfo();
+    exit;
+}
+
+// Kode untuk membuat user baru
+if (isset($_GET['create_test_user'])) {
+    $new_password = '123456';
+    $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
+    error_log("New hash created for test user: " . $new_hash);
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO users (username, password, nama_lengkap, role) VALUES (?, ?, ?, ?)");
+        $result = $stmt->execute(['testuser', $new_hash, 'Test User', 'admin']);
+        echo $result ? "Test user created successfully" : "Failed to create test user";
+    } catch (PDOException $e) {
+        echo "Error creating test user: " . $e->getMessage();
+    }
+    exit;
+}
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h1 class="mb-4">Login</h1>
-        <?php if (isset($error)): ?>
-            <div class="alert alert-danger"><?php echo $error; ?></div>
-        <?php endif; ?>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="username" class="form-label">Username:</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-    </div>
-</div>
-
-<?php include 'includes/footer.php'; ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <?php if (isset($error)) echo "<p style='color: red;'>$error</p>"; ?>
+    <form method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <input type="submit" value="Login">
+    </form>
+</body>
+</html>
