@@ -75,10 +75,16 @@ function createUser($pdo, $username, $password, $nama_lengkap, $role) {
 }
 
 function getUserByUsername($pdo, $username) {
-    $sql = "SELECT * FROM users WHERE username = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$username]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        error_log("getUserByUsername result: " . ($user ? json_encode($user) : 'null'));
+        return $user;
+    } catch (Exception $e) {
+        error_log("Error in getUserByUsername: " . $e->getMessage());
+        return null;
+    }
 }
 
 function getAllUsers($pdo) {

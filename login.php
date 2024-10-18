@@ -7,18 +7,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $user = getUserByUsername($pdo, $username);
+    error_log("Login attempt: username=$username, password=$password");
 
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = $user['role'];
-        
-        // Redirect sesuai role
-        header("Location: pages/admin_dashboard.php");
-        exit();
-    } else {
-        $error = "Username atau password salah.";
+    try {
+        $user = getUserByUsername($pdo, $username);
+        error_log("User found: " . ($user ? json_encode($user) : 'no'));
+
+        if ($user) {
+            error_log("Stored password hash: " . $user['password']);
+            $verify_result = password_verify($password, $user['password']);
+            error_log("Password verify result: " . ($verify_result ? 'true' : 'false'));
+
+            if ($verify_result) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+                
+                error_log("Login successful. Redirecting to dashboard.");
+                header("Location: pages/admin_dashboard.php");
+                exit();
+            } else {
+                $error = "Password salah.";
+            }
+        } else {
+            $error = "Username tidak ditemukan.";
+        }
+    } catch (Exception $e) {
+        error_log("Error during login: " . $e->getMessage());
+        $error = "Terjadi kesalahan saat login.";
     }
 }
 
