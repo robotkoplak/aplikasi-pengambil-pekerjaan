@@ -93,4 +93,6 @@ include '../includes/header.php';
     </tbody>
 </table>
 
+<a href="edit_profile.php" class="btn btn-info">Edit Profil</a>
+
 <?php include '../includes/footer.php'; ?>
