@@ -137,4 +137,18 @@ function getActiveTickets($pdo) {
     $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+function custom_password_verify($password, $hash) {
+    $ret = crypt($password, $hash);
+    if (!is_string($ret) || strlen($ret) != strlen($hash) || strlen($ret) <= 13) {
+        return false;
+    }
+
+    $status = 0;
+    for ($i = 0; $i < strlen($ret); $i++) {
+        $status |= (ord($ret[$i]) ^ ord($hash[$i]));
+    }
+
+    return $status === 0;
+}
 ?>
